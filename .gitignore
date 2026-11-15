@@ -1,0 +1,20 @@
+# Dataset
+dataset/
+data/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment variables
+.env
+
+# Generated outputs
+output/
+
+# Trained model checkpoints
+models/*.pth
