@@ -18,3 +18,6 @@ output/
 
 # Trained model checkpoints
 models/*.pth
+!models/parking_classifier.pth
+!models/slot_context.pth
+!models/slot_geometry.pth
