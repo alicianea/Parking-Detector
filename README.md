@@ -71,6 +71,14 @@ different frame, add `--image "path/to/frame.jpg" --camera-csv "path/to/camera1.
 and choose the CSV for the frame’s camera. Add `--no-display` to save the result
 without opening a window.
 
+## Compare predictions side by side
+
+From the repository root, run this example on rainy Camera 1 frame:
+
+`python compare.py --image "dataset/CNR-EXT_FULL_IMAGE_1000x750/FULL_IMAGE_1000x750/RAINY/2016-01-08/camera1/2016-01-08_0919.jpg" --camera-csv "dataset/CNR-EXT_FULL_IMAGE_1000x750/camera1.csv" --labels "dataset\CNR-EXT-Patches-150x150\LABELS\train.txt"`
+
+The left panel will show MobileNetV2 predictions, and the right panel will show MobileNetV2 + GNN predictions. The comparison image is saved to output/parking_comparison.jpg. Add `--no-display` to save it without opening a window. To try a different frame, pass the image path and the CSV for that frame's camera.
+
 ## Evaluate by weather
 
 The weather evaluation needs the patch archive’s **label lists** and the full
@@ -159,6 +167,3 @@ python train_context.py --evaluate --checkpoint models/slot_context.pth
 python train_context.py --evaluate --checkpoint models/slot_geometry.pth
 ```
 
-To evaluate a manually tagged occlusion subset, pass
-`--subset path/to/occluded_test.txt` with the relevant rows copied from
-`test.txt`. The graph still uses all valid slots in each selected frame.
