@@ -9,7 +9,7 @@ from parking_dataset import ParkingDataset
 
 PROJECT_DIR = Path(__file__).resolve().parent
 DATA_DIR = PROJECT_DIR / "dataset" / "CNR-EXT-Patches-150x150"
-MODEL_PATH = PROJECT_DIR / "models" / "parking_classifier.pth"
+MODEL_PATH = PROJECT_DIR / "models" / "parking_classifier_fast.pth"
 
 device = torch.device(
     "cuda" if torch.cuda.is_available() else "cpu"
