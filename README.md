@@ -26,7 +26,7 @@ The application uses a MobileNetV2 convolutional neural network (CNN) trained th
 
 ## Dataset
 
-This project uses the **CNRPark+EXT** dataset, which contains parking lot images captured under different weather and lighting conditions.
+This project uses the [CNRPark+EXT](http://cnrpark.it) dataset, which contains parking lot images captured under different weather and lighting conditions.
 
 Two dataset components are used:
 
