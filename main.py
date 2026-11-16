@@ -24,6 +24,7 @@ PROJECT_DIR = Path(__file__).resolve().parent
 # Full parking lot images and camera-specific CSV annotations.
 DATA_DIR = PROJECT_DIR / "dataset" / "CNR-EXT_FULL_IMAGE_1000x750" / "FULL_IMAGE_1000x750"
 MODEL_PATH = PROJECT_DIR / "models" / "parking_classifier.pth"
+CONTEXT_PATH = PROJECT_DIR / "models" / "slot_context.pth"
 
 # Location of the trained MobileNetV2 checkpoint.
 OUTPUT_DIR = PROJECT_DIR / "output"
@@ -105,18 +106,7 @@ def load_parking_spaces(csv_path, image_width, image_height):
     return spaces
 
 
-def detect_parking(image_path, csv_path):
-    # Load the full parking lot image in OpenCV's BGR format.
-    image = cv2.imread(str(image_path))
-
-    if image is None:
-        raise FileNotFoundError(
-            f"Could not load image: {image_path}"
-        )
-
-     # Load the trained classifier and its class-label mapping.
-    model, class_to_idx = load_model()
-
+def extract_frame_slots(image, csv_path):
     height, width = image.shape[:2]
 
      # Retrieve parking-space coordinates for the selected camera.
@@ -132,6 +122,9 @@ def detect_parking(image_path, csv_path):
         y = space["y"]
         w = space["w"]
         h = space["h"]
+
+        if w <= 0 or h <= 0:
+            continue
 
         # Find the center of the annotated bounding box.
         # Keeping the center fixed allows us to shrink the crop
@@ -172,12 +165,38 @@ def detect_parking(image_path, csv_path):
     if not crops:
         raise ValueError("No valid parking-space crops found.")
 
+    return torch.stack(crops), valid_spaces
+
+
+def detect_parking(image_path, csv_path, context_checkpoint=None, show=True):
+    # Load the full parking lot image in OpenCV's BGR format.
+    image = cv2.imread(str(image_path))
+
+    if image is None:
+        raise FileNotFoundError(
+            f"Could not load image: {image_path}"
+        )
+
+     # Load the trained classifier and its class-label mapping.
+    model, class_to_idx = load_model()
+
+    crops, valid_spaces = extract_frame_slots(image, csv_path)
+
     # Classify all parking spaces in one batch
-    batch = torch.stack(crops).to(device)
+    batch = crops.to(device)
+    if context_checkpoint is not None:
+        from slot_context import load_context, slot_geometry
+
+        context = load_context(context_checkpoint, MODEL_PATH, device)
+        geometry = slot_geometry(valid_spaces, image.shape).to(device)
 
     # Disable gradient tracking because we are only making predictions.
     with torch.inference_mode():
-        outputs = model(batch)
+        if context_checkpoint is not None:
+            features, baseline = context.encode(model, batch)
+            outputs = context(features, baseline, geometry)
+        else:
+            outputs = model(batch)
         # Convert raw classification scores into probabilities.
         probabilities = torch.softmax(outputs, dim=1)
 
@@ -283,39 +302,28 @@ def detect_parking(image_path, csv_path):
     print(f"Total classified: {free_count + occupied_count + uncertain_count}")
     print(f"Saved result: {output_path}")
 
-    cv2.imshow("Parking Occupancy Detection", image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    if show:
+        cv2.imshow("Parking Occupancy Detection", image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
+    import argparse
 
-     # Select the weather condition, capture date, and camera.
-    # Change these values to test different parking lot images.
-    camera_dir = (
-        DATA_DIR
-        / "OVERCAST"
-        / "2015-11-16"
-        / "camera1"
-    )
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--image", type=Path)
+    parser.add_argument("--camera-csv", type=Path)
+    parser.add_argument("--context", type=Path, default=CONTEXT_PATH, help="Trained slot-context checkpoint")
+    parser.add_argument("--no-display", action="store_true")
+    args = parser.parse_args()
+    if (args.image is None) != (args.camera_csv is None):
+        parser.error("--image and --camera-csv must be supplied together")
+    if args.image is None:
+        camera_dir = DATA_DIR / "OVERCAST" / "2015-11-16" / "camera1"
+        args.image = camera_dir / "2015-11-16_0940.jpg"
+        if not args.image.is_file():
+            raise FileNotFoundError(f"Image not found: {args.image}")
+        args.camera_csv = DATA_DIR.parent / "camera1.csv"
 
-    # Retrieve JPG images and select the first one alphabetically.
-    images = sorted(camera_dir.glob("*.jpg"))
-
-    if not images:
-        raise FileNotFoundError(
-            f"No images found in: {camera_dir}"
-        )
-
-    image_path = images[0]
-
-    # Camera annotations are stored one level above DATA_DIR.
-    # The CSV must correspond to the camera used by the image.
-    csv_path = DATA_DIR.parent / "camera1.csv"
-
-     # Print path information to help diagnose missing files.
-    print("Selected image:", image_path.name)
-    print("Image exists:", image_path.exists())
-    print("CSV exists:", csv_path.exists())
-
-    detect_parking(image_path, csv_path)
+    detect_parking(args.image, args.camera_csv, args.context, not args.no_display)
