@@ -1,6 +1,7 @@
 import csv
 from pathlib import Path
 
+import numpy as np
 import cv2
 import torch
 import torch.nn as nn
@@ -54,6 +55,12 @@ transform = transforms.Compose([
     )
 ])
 
+def draw_slot_outline(image, box, polygon, color, thickness=2):
+    if polygon is None:
+        x1, y1, x2, y2 = box
+        cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
+    else:
+        cv2.polylines(image, [polygon], True, color, thickness)
 
 def load_model():
     model = models.mobilenet_v2(weights=None)
@@ -95,13 +102,21 @@ def load_parking_spaces(csv_path, image_width, image_height):
             w = int(float(row["W"]) * scale_x)
             h = int(float(row["H"]) * scale_y)
 
-            spaces.append({
-                "id": row["SlotId"],
-                "x": x,
-                "y": y,
-                "w": w,
-                "h": h
-            })
+            space = {"id": row["SlotId"], "x": x, "y": y, "w": w, "h": h}
+            fields = [row.get(f"{axis}{i}") for i in range(1, 5) for axis in ("X", "Y")]
+            if any(value not in (None, "") for value in fields):
+                if any(value in (None, "") for value in fields):
+                    raise ValueError(f"Slot {space['id']} has incomplete corner coordinates.")
+                points = np.array([
+                    [round(float(fields[i]) * scale_x),
+                     round(float(fields[i + 1]) * scale_y)]
+                    for i in range(0, 8, 2)
+                ], dtype=np.int32)
+                if not cv2.isContourConvex(points):
+                    raise ValueError(f"Slot {space['id']} needs four corners in perimeter order.")
+                space["polygon"] = points
+                space["x"], space["y"], space["w"], space["h"] = cv2.boundingRect(points)
+            spaces.append(space)
 
     return spaces
 
@@ -142,12 +157,23 @@ def extract_frame_slots(image, csv_path):
         x2 = min(width, int(center_x + new_w / 2))
         y2 = min(height, int(center_y + new_h / 2))
 
+        polygon = space.get("polygon")
+        if polygon is not None:
+            x1, y1 = max(0, x), max(0, y)
+            x2, y2 = min(width, x + w), min(height, y + h)
         # Skip invalid or empty bounding boxes.
         if x2 <= x1 or y2 <= y1:
             continue
 
          # Extract the parking-space region from the full image.
         crop = image[y1:y2, x1:x2]
+
+        if polygon is not None:
+            mask = np.zeros(crop.shape[:2], dtype=np.uint8)
+            relative_points = polygon - np.array([x1, y1], dtype=np.int32)
+            cv2.fillConvexPoly(mask, relative_points, 255)
+            crop = crop.copy()
+            crop[mask == 0] = (104, 116, 124)
 
         rgb_crop = cv2.cvtColor(
             crop, cv2.COLOR_BGR2RGB
@@ -230,14 +256,7 @@ def detect_parking(image_path, csv_path, context_checkpoint=None, show=True):
             color = (0, 0, 255)    # Red: occupied
             occupied_count += 1
 
-         # Draw the classified parking-space bounding box.
-        cv2.rectangle(
-            image,
-            (x1, y1),
-            (x2, y2),
-            color,
-            2
-        )
+        draw_slot_outline(image, (x1,y1,x2,y2), space.get("polygon"), color)
 
         # Display the parking-space ID and prediction confidence.
         cv2.putText(
