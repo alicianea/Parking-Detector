@@ -51,10 +51,15 @@ def draw_panel(image, title, slots, predictions, disagreements, truth, class_nam
     cv2.putText(panel, summary, (12, 51), cv2.FONT_HERSHEY_SIMPLEX, 0.53, WHITE, 1, cv2.LINE_AA)
 
     for (space, x1, y1, x2, y2), prediction, changed in zip(slots, predictions, disagreements):
-        if not changed:
-            continue
+        
         status = class_names[prediction]
-        cv2.rectangle(panel, (x1, y1 + 64), (x2, y2 + 64), BOX_COLORS[status], 2)
+        polygon = space.get("polygon")
+        if polygon is not None:
+            polygon = polygon.copy()
+            polygon[:, 1] += 64
+        detector.draw_slot_outline(
+            panel, (x1, y1 + 64, x2, y2 + 64), polygon, BOX_COLORS[status]
+        )
         label = f'{space["id"]}: {status}'
         actual = truth.get(int(space["id"]))
         if actual is not None:
@@ -95,8 +100,7 @@ def run(args):
     for (space, *_), first, second in zip(slots, baseline, gnn):
         if first != second:
             actual = truth.get(int(space["id"]))
-            print(f'Slot {space["id"]}: {class_names[first]} -> {class_names[second]}'
-                  f' | truth: {class_names.get(actual, "unavailable")}')
+            print(f'Slot {space["id"]}: {class_names[first]} -> {class_names[second]}')
     print(f"Saved comparison: {args.output}")
 
     if not args.no_display:
