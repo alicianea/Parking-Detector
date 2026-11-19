@@ -1,0 +1,5 @@
+split,baseline_fixed,geometry_fixed,new_vs_baseline,new_vs_geometry
+FULL,1681,315,133,163
+SUNNY,938,192,39,41
+OVERCAST,229,19,15,17
+RAINY,514,104,79,105

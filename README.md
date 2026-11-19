@@ -167,3 +167,42 @@ python train_context.py --evaluate --checkpoint models/slot_context.pth
 python train_context.py --evaluate --checkpoint models/slot_geometry.pth
 ```
 
+
+## Generate the final evaluation report
+
+Use the official CNR-EXT patch archive for the three `LABELS` lists and
+the full-image archive for the frames and camera CSVs. Place them in the
+layout above. The final benchmark does not need the actual patch JPEGs.
+[Official CNRPark+EXT dataset](http://cnrpark.it/)
+
+```bash
+python train_context.py --check-data
+python evaluate_report.py --output output/held_out_report
+```
+
+The report command evaluates the same slots with the bundled MobileNetV2,
+geometry-only head, and four-neighbor GNN. It reads the weights without
+training and requires a new output directory for each run. On Apple
+Silicon with PyTorch MPS available, add `--encoder-device mps` to run
+MobileNetV2 on the GPU. The refinement heads use the detector's default
+device.
+
+- `results.md` contains the full-test and weather comparison.
+- `metrics.csv` includes frame counts, slot counts, accuracy and occupied
+  F1 as fractions, and TN, FP, FN, and TP for each model.
+- `predictions.csv` records the ground truth and all three predictions
+  for each labeled slot, with 0 for vacant and 1 for occupied.
+- `gnn_changes.csv` counts corrected and new errors against each simpler
+  model. A slot can count in both comparisons.
+- `examples.csv` identifies the first matching slot for each observed
+  category in frame-path and numeric slot order. The matching PNGs show
+  the original frame and an annotated copy with the target and predictions.
+  `gnn_neighbors.png` shows the incoming neighbors for the first saved case.
+- `manifest.json` records the command, environment, and hashes of the
+  checkpoints, label lists, and used camera layouts. Its presence marks
+  a completed run.
+
+The scores use argmax and include all labeled test slots. Treat examples
+as illustrations of the measured errors. Claims about occlusion or
+generalization to new cameras require a separate evaluation designed
+for those questions.

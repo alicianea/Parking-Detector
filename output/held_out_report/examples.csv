@@ -1,0 +1,5 @@
+category,figure,frame,slot,truth,MobileNetV2,Geometry-only,GNN
+baseline_fixed,baseline_fixed.png,OVERCAST/2015-12-03/camera1/2015-12-03_0741.jpg,195,0,1,0,0
+new_vs_baseline,new_vs_baseline.png,OVERCAST/2015-12-03/camera1/2015-12-03_0911.jpg,193,0,0,1,1
+geometry_fixed,geometry_fixed.png,OVERCAST/2015-12-03/camera1/2015-12-03_0911.jpg,222,1,1,0,1
+new_vs_geometry,new_vs_geometry.png,OVERCAST/2015-12-03/camera1/2015-12-03_0911.jpg,224,1,1,1,0

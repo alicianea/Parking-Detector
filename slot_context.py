@@ -17,6 +17,12 @@ def slot_geometry(valid_spaces, image_shape):
     return torch.tensor(rectangles, dtype=torch.float32)
 
 
+def nearest_slots(centers, count):
+    distances = torch.cdist(centers, centers)
+    distances.fill_diagonal_(float("inf"))
+    return distances.topk(count, largest=False).indices
+
+
 class SlotContext(nn.Module):
     def __init__(self, feature_size, neighbors=4):
         super().__init__()
@@ -51,9 +57,7 @@ class SlotContext(nn.Module):
             # Find the closest slots by center distance in normalized image space.
             # An infinite self-distance keeps each slot out of its own neighbor list.
             centers = geometry[:, :2] + geometry[:, 2:] / 2
-            distances = torch.cdist(centers, centers)
-            distances.fill_diagonal_(float("inf"))
-            indices = distances.topk(count, largest=False).indices
+            indices = nearest_slots(centers, count)
             # Describe each neighbor relative to the receiving slot using center
             # offsets and log ratios for width and height.
             offsets = centers[indices] - centers[:, None]

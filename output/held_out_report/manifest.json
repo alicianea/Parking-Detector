@@ -1,0 +1,37 @@
+{
+  "argv": [
+    "evaluate_report.py",
+    "--encoder-device",
+    "mps",
+    "--output",
+    "output/held_out_report"
+  ],
+  "python": "3.9.6",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "torch": "2.8.0",
+  "torchvision": "0.23.0",
+  "opencv": "5.0.0",
+  "numpy": "2.0.2",
+  "device": "cpu",
+  "encoder_device": "mps",
+  "images": "dataset/CNR-EXT_FULL_IMAGE_1000x750/FULL_IMAGE_1000x750",
+  "camera_csvs": "dataset/CNR-EXT_FULL_IMAGE_1000x750",
+  "sha256": {
+    "models/parking_classifier.pth": "624f8a19a4b6580c7defa068fc5347c9e64d55b5eefac1053805e9556fbea96e",
+    "models/slot_geometry.pth": "4f13ee8a70ac86dfc25928ce9ea62eb7fd2628b509c03941d335509dd73ab7b3",
+    "models/slot_context.pth": "a499a7de5d63e8b58715c40513efcb978caf8405e9d6f91527ed7b954e443c06",
+    "dataset/CNR-EXT-Patches-150x150/LABELS/train.txt": "dd54b702184e6b21107e951db316d70917f01daab137afb14b4fc8adcea42dc6",
+    "dataset/CNR-EXT-Patches-150x150/LABELS/val.txt": "6ea437b8da64825e7f91944be0faa671c8db780a10b88c6d0e63bc4c26bb9f82",
+    "dataset/CNR-EXT-Patches-150x150/LABELS/test.txt": "875b69ff764eb99df4c24083099cee2f1fbdb9f786b9d42921263c3ab69a93b6",
+    "dataset/CNR-EXT_FULL_IMAGE_1000x750/camera1.csv": "054aab35af97ebc2b3c381d1374356d42129a9bdc0b257bdf07f9122854cb19c",
+    "dataset/CNR-EXT_FULL_IMAGE_1000x750/camera2.csv": "d18153ce29c3cf91909f20b787a85837795b6107f00a16b250cb69930513850f",
+    "dataset/CNR-EXT_FULL_IMAGE_1000x750/camera3.csv": "4a0b9ccc146bbcda8254a6f66f3ae04aa8e435348cf52e26c48bcd56325664e4",
+    "dataset/CNR-EXT_FULL_IMAGE_1000x750/camera4.csv": "d975f9725df96fc6a93f52c9a7f2f72b9b21d667effbe2e5f5adde0d925d1892",
+    "dataset/CNR-EXT_FULL_IMAGE_1000x750/camera5.csv": "b537310a0862e6c9b191a9e7c7f881b72fc04e9c1d14fc9dfbf56d8782c112c9",
+    "dataset/CNR-EXT_FULL_IMAGE_1000x750/camera6.csv": "bd4cf0d5757c8601b575dc20f029e51a0aad27b2d15439bca6d9b33af79c202d",
+    "dataset/CNR-EXT_FULL_IMAGE_1000x750/camera7.csv": "116129fe603be15d5122d6b35ea6889447fc1f2f31b580f1fb92acd71a499ef3",
+    "dataset/CNR-EXT_FULL_IMAGE_1000x750/camera8.csv": "467effe467b4507a953f6828c7c57fe6cd8d0f99c0b4b4873324c3d5a75cf3e8",
+    "dataset/CNR-EXT_FULL_IMAGE_1000x750/camera9.csv": "61423b038f22d74566f760fa625109ae04d0593c0762fc743471dc74602c981e"
+  },
+  "example_selection": "First matching slot per category in frame-path and numeric slot order."
+}
